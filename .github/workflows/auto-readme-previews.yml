@@ -19,34 +19,45 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Generate README previews
+      - name: Generate README previews by folder
         shell: bash
         run: |
           START_MARKER="<!-- PREVIEW_START -->"
           END_MARKER="<!-- PREVIEW_END -->"
 
-          PREVIEW_HTML='<table align="center"><tr>'
-          COUNT=0
-          MAX_PER_ROW=3
+          # Build HTML grouped by folder
+          PREVIEW_HTML=""
 
-          while IFS= read -r img; do
-            NAME=$(basename "$img" | sed 's/\.[^.]*$//' | sed 's/-/ /g')
+          # Get list of folders containing images
+          folders=$(git ls-files '*.png' '*.jpg' '*.jpeg' | xargs -n1 dirname | sort -u)
 
-            PREVIEW_HTML+="
-            <td align=\"center\">
-              <img src=\"$img\" width=\"250\"><br>
-              <sub><b>$NAME</b></sub>
-            </td>
-            "
+          for folder in $folders; do
+            PREVIEW_HTML+="<h3 align=\"center\">$folder</h3>"
+            PREVIEW_HTML+="<table align=\"center\"><tr>"
 
-            COUNT=$((COUNT+1))
-            if [ $COUNT -eq $MAX_PER_ROW ]; then
-              PREVIEW_HTML+="</tr><tr>"
-              COUNT=0
-            fi
-          done < <(git ls-files '*.png' '*.jpg' '*.jpeg')
+            COUNT=0
+            MAX_PER_ROW=3
 
-          PREVIEW_HTML+="</tr></table>"
+            # list images in folder
+            while IFS= read -r img; do
+              NAME=$(basename "$img" | sed 's/\.[^.]*$//' | sed 's/-/ /g')
+
+              PREVIEW_HTML+="
+              <td align=\"center\">
+                <img src=\"$img\" width=\"250\"><br>
+                <sub><b>$NAME</b></sub>
+              </td>
+              "
+
+              COUNT=$((COUNT+1))
+              if [ $COUNT -eq $MAX_PER_ROW ]; then
+                PREVIEW_HTML+="</tr><tr>"
+                COUNT=0
+              fi
+            done < <(git ls-files "$folder"/*.{png,jpg,jpeg} 2>/dev/null)
+
+            PREVIEW_HTML+="</tr></table><br>"
+          done
 
           awk -v start="$START_MARKER" \
               -v end="$END_MARKER" \
