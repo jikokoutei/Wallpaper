@@ -1,0 +1,56 @@
+name: Auto Generate README Previews
+
+on:
+  push:
+    paths:
+      - "**/*.png"
+      - "**/*.jpg"
+      - "**/*.jpeg"
+
+jobs:
+  generate-previews:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate README previews
+        run: |
+          PREVIEW_HTML="<table align=\"center\"><tr>"
+          COUNT=0
+          MAX_PER_ROW=3
+
+          for img in $(git ls-files '*.png' '*.jpg' '*.jpeg'); do
+            NAME=$(basename "$img" | sed 's/\.[^.]*$//' | sed 's/-/ /g')
+
+            PREVIEW_HTML+="
+            <td align=\"center\">
+              <img src=\"$img\" width=\"250\"><br>
+              <sub><b>$NAME</b></sub>
+            </td>
+            "
+
+            COUNT=$((COUNT+1))
+            if [ $COUNT -eq $MAX_PER_ROW ]; then
+              PREVIEW_HTML+="</tr><tr>"
+              COUNT=0
+            fi
+          done
+
+          PREVIEW_HTML+="</tr></table>"
+
+          awk -v start=\"<!-- PREVIEW_START -->\" \
+              -v end=\"<!-- PREVIEW_END -->\" \
+              -v content=\"$PREVIEW_HTML\" '
+          $0 ~ start {print; print content; skip=1}
+          $0 ~ end {skip=0}
+          !skip
+          ' README.md > README.tmp && mv README.tmp README.md
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add README.md
+          git commit -m "Auto-update README previews" || echo "No changes"
+          git push
