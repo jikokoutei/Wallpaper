@@ -17,6 +17,10 @@ for img in sorted(images):
     folder = os.path.dirname(img) or "."
     groups.setdefault(folder, []).append(img)
 
+# 🔥 SORT IMAGES INSIDE EACH FOLDER
+for folder in groups:
+    groups[folder].sort()
+
 # sort folders alphabetically
 sorted_folders = sorted(groups.keys())
 
@@ -25,10 +29,6 @@ html = ""
 for folder in sorted_folders:
     imgs = groups[folder]
 
-    # convert folder name into nested heading
-    # Example: "Wallpaper Bank/Dark" becomes:
-    # Wallpaper Bank
-    # Dark
     parts = folder.split("/")
     heading = " / ".join(parts)
 
