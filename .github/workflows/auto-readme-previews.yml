@@ -19,9 +19,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
       - name: Generate README previews by folder
-        shell: python
         run: |
+          python - <<'PY'
           import os, re, urllib.parse
 
           start_marker = "<!-- PREVIEW_START -->"
@@ -74,6 +79,7 @@ jobs:
 
           with open("README.md", "w", encoding="utf-8") as f:
               f.write(new_content)
+          PY
 
       - name: Commit changes
         run: |
