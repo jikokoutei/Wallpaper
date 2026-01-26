@@ -3,6 +3,24 @@ import os, re, urllib.parse
 start_marker = "<!-- PREVIEW_START -->"
 end_marker = "<!-- PREVIEW_END -->"
 
+# --- Read existing README ---
+with open("README.md", "r", encoding="utf-8") as f:
+    content = f.read()
+
+# Extract existing preview names
+existing_section = re.search(
+    rf"{re.escape(start_marker)}(.*?){re.escape(end_marker)}",
+    content,
+    re.S
+)
+
+existing_names = set()
+if existing_section:
+    # Extract <sub><b>name</b></sub> patterns
+    existing_names = set(
+        re.findall(r"<sub><b>(.*?)</b></sub>", existing_section.group(1))
+    )
+
 # collect all image files
 images = []
 for root, _, files in os.walk("."):
@@ -14,10 +32,16 @@ for root, _, files in os.walk("."):
 # group by folder
 groups = {}
 for img in sorted(images):
+    name = os.path.splitext(os.path.basename(img))[0].replace("-", " ")
+
+    # skip if name already exists in README
+    if name in existing_names:
+        continue
+
     folder = os.path.dirname(img) or "."
     groups.setdefault(folder, []).append(img)
 
-# 🔥 SORT IMAGES INSIDE EACH FOLDER
+# sort images inside each folder
 for folder in groups:
     groups[folder].sort()
 
@@ -51,9 +75,6 @@ for folder in sorted_folders:
     html += "</tr></table>\n<br>\n"
 
 # replace section in README
-with open("README.md", "r", encoding="utf-8") as f:
-    content = f.read()
-
 pattern = re.compile(
     rf"{re.escape(start_marker)}.*?{re.escape(end_marker)}",
     re.S
