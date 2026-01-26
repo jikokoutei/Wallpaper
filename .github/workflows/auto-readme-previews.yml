@@ -7,7 +7,7 @@ on:
       - "**/*.jpg"
       - "**/*.jpeg"
 
-  workflow_dispatch: 
+  workflow_dispatch:
 
 jobs:
   generate-previews:
@@ -17,12 +17,16 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Generate README previews
+        shell: bash
         run: |
-          PREVIEW_HTML="<table align=\"center\"><tr>"
+          START_MARKER="<!-- PREVIEW_START -->"
+          END_MARKER="<!-- PREVIEW_END -->"
+
+          PREVIEW_HTML='<table align="center"><tr>'
           COUNT=0
           MAX_PER_ROW=3
 
-          for img in $(git ls-files '*.png' '*.jpg' '*.jpeg'); do
+          while IFS= read -r img; do
             NAME=$(basename "$img" | sed 's/\.[^.]*$//' | sed 's/-/ /g')
 
             PREVIEW_HTML+="
@@ -37,16 +41,16 @@ jobs:
               PREVIEW_HTML+="</tr><tr>"
               COUNT=0
             fi
-          done
+          done < <(git ls-files '*.png' '*.jpg' '*.jpeg')
 
           PREVIEW_HTML+="</tr></table>"
 
-          awk -v start=\"<!-- PREVIEW_START -->\" \
-              -v end=\"<!-- PREVIEW_END -->\" \
-              -v content=\"$PREVIEW_HTML\" '
-          $0 ~ start {print; print content; skip=1}
-          $0 ~ end {skip=0}
-          !skip
+          awk -v start="$START_MARKER" \
+              -v end="$END_MARKER" \
+              -v content="$PREVIEW_HTML" '
+            $0 ~ start {print; print content; skip=1; next}
+            $0 ~ end {skip=0}
+            !skip
           ' README.md > README.tmp && mv README.tmp README.md
 
       - name: Commit changes
