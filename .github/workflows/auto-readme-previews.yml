@@ -7,6 +7,8 @@ on:
       - "**/*.jpg"
       - "**/*.jpeg"
 
+  workflow_dispatch: 
+
 jobs:
   generate-previews:
     runs-on: ubuntu-latest
