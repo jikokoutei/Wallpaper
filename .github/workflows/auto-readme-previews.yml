@@ -1,5 +1,8 @@
 name: Auto Generate README Previews
 
+permissions:
+  contents: write
+
 on:
   push:
     paths:
