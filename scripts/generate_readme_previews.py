@@ -7,7 +7,6 @@ end_marker = "<!-- PREVIEW_END -->"
 with open("README.md", "r", encoding="utf-8") as f:
     content = f.read()
 
-# Extract existing preview names
 existing_section = re.search(
     rf"{re.escape(start_marker)}(.*?){re.escape(end_marker)}",
     content,
@@ -16,7 +15,6 @@ existing_section = re.search(
 
 existing_names = set()
 if existing_section:
-    # Extract <sub><b>name</b></sub> patterns
     existing_names = set(
         re.findall(r"<sub><b>(.*?)</b></sub>", existing_section.group(1))
     )
@@ -29,29 +27,31 @@ for root, _, files in os.walk("."):
             path = os.path.join(root, f).replace("\\", "/").lstrip("./")
             images.append(path)
 
+# Force ASCII sort on raw paths
+images = sorted(images)
+
 # group by folder
 groups = {}
-for img in sorted(images):
+for img in images:
     name = os.path.splitext(os.path.basename(img))[0].replace("-", " ")
 
-    # skip if name already exists in README
+    # skip duplicates
     if name in existing_names:
         continue
 
     folder = os.path.dirname(img) or "."
     groups.setdefault(folder, []).append(img)
 
-# sort images inside each folder
-for folder in groups:
-    groups[folder].sort()
-
-# sort folders alphabetically
+# sort folders ASCII
 sorted_folders = sorted(groups.keys())
 
 # generate html
 html = ""
 for folder in sorted_folders:
     imgs = groups[folder]
+
+    # Force ASCII sort within each folder
+    imgs = sorted(imgs)
 
     parts = folder.split("/")
     heading = " / ".join(parts)
