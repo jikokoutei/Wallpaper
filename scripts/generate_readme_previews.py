@@ -15,6 +15,7 @@ VIDEO_EXTS = (".mp4", ".mkv", ".mov", ".webm", ".avi")
 
 PREVIEW_DIR = "video_previews"
 THUMB_WIDTH = 250
+MAX_WIDTH = 900
 # =======================================
 
 TARGET_DIR = sys.argv[1] if len(sys.argv) > 1 else "."
@@ -36,11 +37,11 @@ existing_keys = set(re.findall(r'data-key="(.*?)"', existing_html))
 
 # ---------- Collect repo files ----------
 items = []
+seen = set()
 
 for root, _, files in os.walk(TARGET_DIR):
     root = root.replace("\\", "/")
 
-    # skip preview output directory
     if root.startswith(PREVIEW_DIR):
         continue
 
@@ -51,7 +52,10 @@ for root, _, files in os.walk(TARGET_DIR):
         ext = os.path.splitext(file)[1].lower()
         if ext in IMAGE_EXTS or ext in VIDEO_EXTS:
             path = os.path.join(root, file).replace("\\", "/").lstrip("./")
-            items.append(path)
+            key = path.lower()
+            if key not in seen:
+                seen.add(key)
+                items.append(path)
 
 items.sort()
 
@@ -70,12 +74,19 @@ new_html = ""
 
 for folder in sorted(groups):
     files = groups[folder]
+    if not files:
+        continue  # no new items → no header
+
     heading = " / ".join(folder.split("/"))
 
-    new_html += f'<h3 align="center">{heading}</h3>\n'
-    new_html += '<table align="center"><tr>\n'
+    section_html = ""
+    section_html += f'<h3 align="center">{heading}</h3>\n'
+    section_html += (
+        f'<div style="max-width:{MAX_WIDTH}px; overflow-x:auto; margin:auto;">\n'
+        '<table><tr>\n'
+    )
 
-    for i, file in enumerate(files):
+    for file in files:
         raw_name = os.path.splitext(os.path.basename(file))[0]
         name = re.sub(r"[.-]+", " ", raw_name).strip()
 
@@ -87,7 +98,7 @@ for folder in sorted(groups):
         if ext in IMAGE_EXTS:
             img_url = urllib.parse.quote(file)
             cell = f"""
-<td align="center" data-key="{key}">
+<td align="center" data-key="{key}" style="padding:6px;">
   <img src="{img_url}" width="{THUMB_WIDTH}"><br>
   <sub><b>{name}</b></sub>
 </td>
@@ -114,7 +125,7 @@ for folder in sorted(groups):
             preview_url = urllib.parse.quote(preview_path)
 
             cell = f"""
-<td align="center" data-key="{key}">
+<td align="center" data-key="{key}" style="padding:6px;">
   <a href="{file_url}">
     <img src="{preview_url}" width="{THUMB_WIDTH}">
   </a><br>
@@ -122,12 +133,10 @@ for folder in sorted(groups):
 </td>
 """
 
-        new_html += cell
+        section_html += cell
 
-        if (i + 1) % 3 == 0:
-            new_html += "</tr><tr>\n"
-
-    new_html += "</tr></table>\n<br>\n"
+    section_html += "</tr></table>\n</div>\n<br>\n"
+    new_html += section_html
 
 # ---------- Update README ----------
 final_html = existing_html + "\n" + new_html if existing_html else new_html
