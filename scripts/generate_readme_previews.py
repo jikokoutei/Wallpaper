@@ -15,8 +15,8 @@ VIDEO_EXTS = (".mp4", ".mkv", ".mov", ".webm", ".avi")
 
 PREVIEW_DIR = "video_previews"
 
-IMAGE_WIDTH = 250
-VIDEO_WIDTH = 360
+IMAGE_WIDTH = 250     # fixed horizontal
+VIDEO_WIDTH = 360     # eye-catcher
 MAX_WIDTH = 900
 # =======================================
 
@@ -84,7 +84,8 @@ for folder in sorted(groups):
 
     section = f'<h3 align="center">{heading}</h3>\n'
     section += (
-        f'<div style="max-width:{MAX_WIDTH}px; overflow-x:auto; margin:auto;">\n'
+        f'<div style="max-width:{MAX_WIDTH}px; '
+        'overflow-x:auto; overflow-y:hidden; margin:auto;">\n'
         '<table><tr>\n'
     )
 
@@ -100,7 +101,7 @@ for folder in sorted(groups):
             img_url = urllib.parse.quote(file)
             cell = f"""
 <td align="center" data-key="{key}" style="padding:6px;">
-  <img src="{img_url}" width="{IMAGE_WIDTH}">
+  <img src="{img_url}" width="{IMAGE_WIDTH}" style="height:auto; max-height:none;">
 </td>
 """
 
@@ -109,7 +110,7 @@ for folder in sorted(groups):
             img_url = urllib.parse.quote(file)
             cell = f"""
 <td align="center" data-key="{key}" style="padding:6px;">
-  <img src="{img_url}" width="{IMAGE_WIDTH}"><br>
+  <img src="{img_url}" width="{IMAGE_WIDTH}" style="height:auto; max-height:none;"><br>
   <sub><b>{name}</b></sub>
 </td>
 """
@@ -121,13 +122,7 @@ for folder in sorted(groups):
 
             if not os.path.exists(preview_path):
                 subprocess.run(
-                    [
-                        "ffmpeg", "-y",
-                        "-ss", "1",
-                        "-i", file,
-                        "-frames:v", "1",
-                        preview_path
-                    ],
+                    ["ffmpeg", "-y", "-ss", "1", "-i", file, "-frames:v", "1", preview_path],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL
                 )
@@ -137,7 +132,7 @@ for folder in sorted(groups):
             cell = f"""
 <td align="center" data-key="{key}" style="padding:6px;">
   <a href="{file_url}" style="position:relative; display:inline-block;">
-    <img src="{preview_url}" width="{VIDEO_WIDTH}">
+    <img src="{preview_url}" width="{VIDEO_WIDTH}" style="height:auto; max-height:none;">
     <div style="
       position:absolute;
       bottom:0;
