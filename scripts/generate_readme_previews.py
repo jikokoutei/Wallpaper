@@ -10,7 +10,7 @@ import sys
 START_MARKER = "<!-- PREVIEW_START -->"
 END_MARKER = "<!-- PREVIEW_END -->"
 
-IMAGE_EXTS = (".png", ".jpg", ".jpeg", ".webp", ".bmp")
+IMAGE_EXTS = (".png", ".jpg", ".jpeg", ".webp", ".bmp", ".gif")
 VIDEO_EXTS = (".mp4", ".mkv", ".mov", ".webm", ".avi")
 
 PREVIEW_DIR = "video_previews"
@@ -34,6 +34,7 @@ match = re.search(
 
 existing_html = match.group(1) if match else ""
 existing_keys = set(re.findall(r'data-key="(.*?)"', existing_html))
+existing_headers = set(re.findall(r"<h3.*?>(.*?)</h3>", existing_html))
 
 # ---------- Collect repo files ----------
 items = []
@@ -75,27 +76,36 @@ new_html = ""
 for folder in sorted(groups):
     files = groups[folder]
     if not files:
-        continue  # no new items → no header
+        continue
 
     heading = " / ".join(folder.split("/"))
+    if heading in existing_headers:
+        continue  # header already exists → skip whole section
 
-    section_html = ""
-    section_html += f'<h3 align="center">{heading}</h3>\n'
+    section_html = f'<h3 align="center">{heading}</h3>\n'
     section_html += (
         f'<div style="max-width:{MAX_WIDTH}px; overflow-x:auto; margin:auto;">\n'
         '<table><tr>\n'
     )
 
     for file in files:
+        ext = os.path.splitext(file)[1].lower()
         raw_name = os.path.splitext(os.path.basename(file))[0]
         name = re.sub(r"[.-]+", " ", raw_name).strip()
-
-        ext = os.path.splitext(file)[1].lower()
-        file_url = urllib.parse.quote(file)
         key = file.lower()
+        file_url = urllib.parse.quote(file)
+
+        # ---------- GIF (animated → no label) ----------
+        if ext == ".gif":
+            img_url = urllib.parse.quote(file)
+            cell = f"""
+<td align="center" data-key="{key}" style="padding:6px;">
+  <img src="{img_url}" width="{THUMB_WIDTH}">
+</td>
+"""
 
         # ---------- IMAGE ----------
-        if ext in IMAGE_EXTS:
+        elif ext in IMAGE_EXTS:
             img_url = urllib.parse.quote(file)
             cell = f"""
 <td align="center" data-key="{key}" style="padding:6px;">
@@ -126,10 +136,21 @@ for folder in sorted(groups):
 
             cell = f"""
 <td align="center" data-key="{key}" style="padding:6px;">
-  <a href="{file_url}">
+  <a href="{file_url}" style="position:relative; display:inline-block;">
     <img src="{preview_url}" width="{THUMB_WIDTH}">
-  </a><br>
-  <sub><b>{name}</b></sub>
+    <div style="
+      position:absolute;
+      bottom:0;
+      width:100%;
+      background:linear-gradient(transparent, rgba(0,0,0,0.7));
+      color:white;
+      font-size:12px;
+      padding:4px 2px;
+      text-align:center;
+      box-sizing:border-box;">
+      <b>{name}</b>
+    </div>
+  </a>
 </td>
 """
 
