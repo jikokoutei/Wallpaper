@@ -9,6 +9,11 @@ on:
       - "**/*.png"
       - "**/*.jpg"
       - "**/*.jpeg"
+      - "**/*.webp"
+      - "**/*.mp4"
+      - "**/*.mkv"
+      - "**/*.mov"
+      - "**/*.webm"
   workflow_dispatch:
 
 jobs:
@@ -16,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Python
@@ -24,13 +29,16 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Run preview generator
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Generate README previews
         run: python scripts/generate_readme_previews.py
 
       - name: Commit changes
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add README.md
-          git commit -m "Auto-update README previews" || echo "No changes"
+          git add README.md video_previews || true
+          git commit -m "Auto-update README previews" || echo "No changes to commit"
           git push
