@@ -1,104 +1,122 @@
-import os, re, urllib.parse, subprocess, pathlib
+import os
+import re
+import urllib.parse
+import subprocess
+import pathlib
+import hashlib
+import sys
 
-start_marker = "<!-- PREVIEW_START -->"
-end_marker = "<!-- PREVIEW_END -->"
+# =============== CONFIG =================
+START_MARKER = "<!-- PREVIEW_START -->"
+END_MARKER = "<!-- PREVIEW_END -->"
 
-VIDEO_EXTS = (".mp4", ".mov", ".webm", ".mkv")
-IMAGE_EXTS = (".png", ".jpg", ".jpeg")
+IMAGE_EXTS = (".png", ".jpg", ".jpeg", ".webp", ".bmp")
+VIDEO_EXTS = (".mp4", ".mkv", ".mov", ".webm", ".avi")
+
 PREVIEW_DIR = "video_previews"
+THUMB_WIDTH = 250
+# =======================================
+
+TARGET_DIR = sys.argv[1] if len(sys.argv) > 1 else "."
 
 pathlib.Path(PREVIEW_DIR).mkdir(exist_ok=True)
 
-# --- Read existing README ---
+# ---------- Read README ----------
 with open("README.md", "r", encoding="utf-8") as f:
-    content = f.read()
+    readme = f.read()
 
 match = re.search(
-    rf"{re.escape(start_marker)}(.*?){re.escape(end_marker)}",
-    content,
+    rf"{re.escape(START_MARKER)}(.*?){re.escape(END_MARKER)}",
+    readme,
     re.S
 )
 
-existing_html = ""
-existing_names = set()
+existing_html = match.group(1) if match else ""
+existing_keys = set(re.findall(r'data-key="(.*?)"', existing_html))
 
-if match:
-    existing_html = match.group(1)
-    existing_names = set(
-        re.findall(r"<sub><b>(.*?)</b></sub>", existing_html)
-    )
-
+# ---------- Collect repo files ----------
 items = []
 
-# --- Collect images + videos ---
-for root, _, files in os.walk("."):
-    for f in files:
-        ext = os.path.splitext(f)[1].lower()
+for root, _, files in os.walk(TARGET_DIR):
+    root = root.replace("\\", "/")
+
+    # skip preview output directory
+    if root.startswith(PREVIEW_DIR):
+        continue
+
+    for file in files:
+        if file.startswith("."):
+            continue
+
+        ext = os.path.splitext(file)[1].lower()
         if ext in IMAGE_EXTS or ext in VIDEO_EXTS:
-            path = os.path.join(root, f).replace("\\", "/").lstrip("./")
+            path = os.path.join(root, file).replace("\\", "/").lstrip("./")
             items.append(path)
 
-items = sorted(items)
+items.sort()
 
+# ---------- Group by folder ----------
 groups = {}
-
 for item in items:
-    name = os.path.splitext(os.path.basename(item))[0].replace("-", " ")
-
-    if name in existing_names:
+    key = item.lower()
+    if key in existing_keys:
         continue
 
     folder = os.path.dirname(item) or "."
     groups.setdefault(folder, []).append(item)
 
-sorted_folders = sorted(groups.keys())
-
+# ---------- Generate README HTML ----------
 new_html = ""
 
-for folder in sorted_folders:
-    files = sorted(groups[folder])
+for folder in sorted(groups):
+    files = groups[folder]
     heading = " / ".join(folder.split("/"))
 
     new_html += f'<h3 align="center">{heading}</h3>\n'
     new_html += '<table align="center"><tr>\n'
 
     for i, file in enumerate(files):
-        name = os.path.splitext(os.path.basename(file))[0].replace("-", " ")
+        raw_name = os.path.splitext(os.path.basename(file))[0]
+        name = re.sub(r"[.-]+", " ", raw_name).strip()
+
         ext = os.path.splitext(file)[1].lower()
-
         file_url = urllib.parse.quote(file)
+        key = file.lower()
 
-        # --- IMAGE ---
+        # ---------- IMAGE ----------
         if ext in IMAGE_EXTS:
-            thumb_url = urllib.parse.quote(file)
-
+            img_url = urllib.parse.quote(file)
             cell = f"""
-<td align="center">
-  <img src="{thumb_url}" width="250"><br>
+<td align="center" data-key="{key}">
+  <img src="{img_url}" width="{THUMB_WIDTH}"><br>
   <sub><b>{name}</b></sub>
 </td>
 """
 
-        # --- VIDEO ---
+        # ---------- VIDEO ----------
         else:
-            preview_path = f"{PREVIEW_DIR}/{os.path.basename(file)}.png"
+            h = hashlib.md5(file.encode()).hexdigest()[:12]
+            preview_path = f"{PREVIEW_DIR}/{h}.png"
 
             if not os.path.exists(preview_path):
-                subprocess.run([
-                    "ffmpeg",
-                    "-y",
-                    "-ss", "1",
-                    "-i", file,
-                    "-frames:v", "1",
-                    preview_path
-                ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.run(
+                    [
+                        "ffmpeg", "-y",
+                        "-ss", "1",
+                        "-i", file,
+                        "-frames:v", "1",
+                        preview_path
+                    ],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
+                )
 
             preview_url = urllib.parse.quote(preview_path)
 
             cell = f"""
-<td align="center">
+<td align="center" data-key="{key}">
   <a href="{file_url}">
-    <img src="{preview_url}" width="250">
+    <img src="{preview_url}" width="{THUMB_WIDTH}">
   </a><br>
   <sub><b>{name}</b></sub>
 </td>
@@ -111,17 +129,17 @@ for folder in sorted_folders:
 
     new_html += "</tr></table>\n<br>\n"
 
+# ---------- Update README ----------
 final_html = existing_html + "\n" + new_html
 
-pattern = re.compile(
-    rf"{re.escape(start_marker)}.*?{re.escape(end_marker)}",
-    re.S
-)
-
-new_content = pattern.sub(
-    f"{start_marker}\n{final_html}\n{end_marker}",
-    content
+updated_readme = re.sub(
+    rf"{re.escape(START_MARKER)}.*?{re.escape(END_MARKER)}",
+    f"{START_MARKER}\n{final_html}\n{END_MARKER}",
+    readme,
+    flags=re.S
 )
 
 with open("README.md", "w", encoding="utf-8") as f:
-    f.write(new_content)
+    f.write(updated_readme)
+
+print("✅ GitHub README previews updated")
