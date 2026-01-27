@@ -14,7 +14,9 @@ IMAGE_EXTS = (".png", ".jpg", ".jpeg", ".webp", ".bmp", ".gif")
 VIDEO_EXTS = (".mp4", ".mkv", ".mov", ".webm", ".avi")
 
 PREVIEW_DIR = "video_previews"
-THUMB_WIDTH = 250
+
+IMAGE_WIDTH = 250
+VIDEO_WIDTH = 360
 MAX_WIDTH = 900
 # =======================================
 
@@ -36,7 +38,7 @@ existing_html = match.group(1) if match else ""
 existing_keys = set(re.findall(r'data-key="(.*?)"', existing_html))
 existing_headers = set(re.findall(r"<h3.*?>(.*?)</h3>", existing_html))
 
-# ---------- Collect repo files ----------
+# ---------- Collect files ----------
 items = []
 seen = set()
 
@@ -63,14 +65,12 @@ items.sort()
 # ---------- Group by folder ----------
 groups = {}
 for item in items:
-    key = item.lower()
-    if key in existing_keys:
+    if item.lower() in existing_keys:
         continue
-
     folder = os.path.dirname(item) or "."
     groups.setdefault(folder, []).append(item)
 
-# ---------- Generate README HTML ----------
+# ---------- Generate HTML ----------
 new_html = ""
 
 for folder in sorted(groups):
@@ -80,10 +80,10 @@ for folder in sorted(groups):
 
     heading = " / ".join(folder.split("/"))
     if heading in existing_headers:
-        continue  # header already exists → skip whole section
+        continue
 
-    section_html = f'<h3 align="center">{heading}</h3>\n'
-    section_html += (
+    section = f'<h3 align="center">{heading}</h3>\n'
+    section += (
         f'<div style="max-width:{MAX_WIDTH}px; overflow-x:auto; margin:auto;">\n'
         '<table><tr>\n'
     )
@@ -95,12 +95,12 @@ for folder in sorted(groups):
         key = file.lower()
         file_url = urllib.parse.quote(file)
 
-        # ---------- GIF (animated → no label) ----------
+        # ---------- GIF (no label) ----------
         if ext == ".gif":
             img_url = urllib.parse.quote(file)
             cell = f"""
 <td align="center" data-key="{key}" style="padding:6px;">
-  <img src="{img_url}" width="{THUMB_WIDTH}">
+  <img src="{img_url}" width="{IMAGE_WIDTH}">
 </td>
 """
 
@@ -109,7 +109,7 @@ for folder in sorted(groups):
             img_url = urllib.parse.quote(file)
             cell = f"""
 <td align="center" data-key="{key}" style="padding:6px;">
-  <img src="{img_url}" width="{THUMB_WIDTH}"><br>
+  <img src="{img_url}" width="{IMAGE_WIDTH}"><br>
   <sub><b>{name}</b></sub>
 </td>
 """
@@ -137,15 +137,15 @@ for folder in sorted(groups):
             cell = f"""
 <td align="center" data-key="{key}" style="padding:6px;">
   <a href="{file_url}" style="position:relative; display:inline-block;">
-    <img src="{preview_url}" width="{THUMB_WIDTH}">
+    <img src="{preview_url}" width="{VIDEO_WIDTH}">
     <div style="
       position:absolute;
       bottom:0;
       width:100%;
-      background:linear-gradient(transparent, rgba(0,0,0,0.7));
+      background:linear-gradient(transparent, rgba(0,0,0,0.75));
       color:white;
-      font-size:12px;
-      padding:4px 2px;
+      font-size:13px;
+      padding:6px 2px;
       text-align:center;
       box-sizing:border-box;">
       <b>{name}</b>
@@ -154,10 +154,10 @@ for folder in sorted(groups):
 </td>
 """
 
-        section_html += cell
+        section += cell
 
-    section_html += "</tr></table>\n</div>\n<br>\n"
-    new_html += section_html
+    section += "</tr></table>\n</div>\n<br>\n"
+    new_html += section
 
 # ---------- Update README ----------
 final_html = existing_html + "\n" + new_html if existing_html else new_html
