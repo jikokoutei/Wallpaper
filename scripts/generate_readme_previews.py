@@ -130,7 +130,7 @@ for folder in sorted(groups):
     new_html += "</tr></table>\n<br>\n"
 
 # ---------- Update README ----------
-final_html = existing_html + "\n" + new_html
+final_html = existing_html + "\n" + new_html if existing_html else new_html
 
 updated_readme = re.sub(
     rf"{re.escape(START_MARKER)}.*?{re.escape(END_MARKER)}",
