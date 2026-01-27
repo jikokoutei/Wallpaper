@@ -1269,21 +1269,6 @@
 <br>
 
 
-<h3 align="center">video_previews</h3>
-<div style="max-width:900px; overflow-x:auto; overflow-y:hidden; margin:auto;">
-<table><tr>
 
-<td align="center" data-key="video_previews/4e66c24456a7.png" style="padding:6px;">
-  <img src="video_previews/4e66c24456a7.png" width="250" style="height:auto; max-height:none;"><br>
-  <sub><b>4e66c24456a7</b></sub>
-</td>
-
-<td align="center" data-key="video_previews/9c5cccde9303.png" style="padding:6px;">
-  <img src="video_previews/9c5cccde9303.png" width="250" style="height:auto; max-height:none;"><br>
-  <sub><b>9c5cccde9303</b></sub>
-</td>
-</tr></table>
-</div>
-<br>
 
 <!-- PREVIEW_END -->
