@@ -17,7 +17,7 @@ PREVIEW_DIR = "video_previews"
 
 IMAGE_WIDTH = 250     # fixed horizontal
 VIDEO_WIDTH = 360     # eye-catcher
-MAX_WIDTH = 900
+MAX_WIDTH = auto
 # =======================================
 
 TARGET_DIR = sys.argv[1] if len(sys.argv) > 1 else "."
