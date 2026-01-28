@@ -14,6 +14,7 @@ IMAGE_EXTS = (".png", ".jpg", ".jpeg", ".webp", ".bmp", ".gif")
 VIDEO_EXTS = (".mp4", ".mkv", ".mov", ".webm", ".avi")
 
 PREVIEW_DIR = "video_previews"
+IMAGE_WIDTH = 250
 # =======================================
 
 TARGET_DIR = sys.argv[1] if len(sys.argv) > 1 else "."
@@ -79,10 +80,7 @@ for folder in sorted(groups):
         continue
 
     section = f'<h3 align="center">{heading}</h3>\n'
-    section += (
-        '<div style="overflow-x:auto; white-space:nowrap;">\n'
-        '<table><tr>\n'
-    )
+    section += '<table align="center"><tr>\n'
 
     for file in files:
         ext = os.path.splitext(file)[1].lower()
@@ -95,8 +93,8 @@ for folder in sorted(groups):
         if ext == ".gif":
             img_url = urllib.parse.quote(file)
             cell = f"""
-<td align="center" data-key="{key}" style="padding:6px;">
-  <img src="{img_url}" style="height:auto;">
+<td align="center" data-key="{key}" style="padding:8px;">
+  <img src="{img_url}" width="{IMAGE_WIDTH}" style="height:auto;">
 </td>
 """
 
@@ -104,8 +102,8 @@ for folder in sorted(groups):
         elif ext in IMAGE_EXTS:
             img_url = urllib.parse.quote(file)
             cell = f"""
-<td align="center" data-key="{key}" style="padding:6px;">
-  <img src="{img_url}" style="height:auto;"><br>
+<td align="center" data-key="{key}" style="padding:8px;">
+  <img src="{img_url}" width="{IMAGE_WIDTH}" style="height:auto;"><br>
   <sub><b>{name}</b></sub>
 </td>
 """
@@ -125,28 +123,17 @@ for folder in sorted(groups):
             preview_url = urllib.parse.quote(preview_path)
 
             cell = f"""
-<td align="center" data-key="{key}" style="padding:6px;">
-  <a href="{file_url}" style="position:relative; display:inline-block;">
-    <img src="{preview_url}" style="height:auto;">
-    <div style="
-      position:absolute;
-      bottom:0;
-      width:100%;
-      background:linear-gradient(transparent, rgba(0,0,0,0.75));
-      color:white;
-      font-size:13px;
-      padding:6px 2px;
-      text-align:center;
-      box-sizing:border-box;">
-      <b>{name}</b>
-    </div>
+<td align="center" data-key="{key}" style="padding:8px;">
+  <a href="{file_url}" style="display:inline-block;">
+    <img src="{preview_url}" width="{IMAGE_WIDTH}" style="height:auto;"><br>
+    <sub><b>{name}</b></sub>
   </a>
 </td>
 """
 
         section += cell
 
-    section += "</tr></table>\n</div>\n<br>\n"
+    section += "</tr></table>\n<br>\n"
     new_html += section
 
 # ---------- Update README ----------
