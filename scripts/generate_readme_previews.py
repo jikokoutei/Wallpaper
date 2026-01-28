@@ -8,16 +8,12 @@ import sys
 
 # =============== CONFIG =================
 START_MARKER = "<!-- PREVIEW_START -->"
-END_MARKER = "<!-- PREVIEW_END -->"
+END_MARKER   = "<!-- PREVIEW_END -->"
 
 IMAGE_EXTS = (".png", ".jpg", ".jpeg", ".webp", ".bmp", ".gif")
 VIDEO_EXTS = (".mp4", ".mkv", ".mov", ".webm", ".avi")
 
 PREVIEW_DIR = "video_previews"
-
-IMAGE_WIDTH = 250     # fixed horizontal
-VIDEO_WIDTH = 360     # eye-catcher
-MAX_WIDTH = auto
 # =======================================
 
 TARGET_DIR = sys.argv[1] if len(sys.argv) > 1 else "."
@@ -84,8 +80,7 @@ for folder in sorted(groups):
 
     section = f'<h3 align="center">{heading}</h3>\n'
     section += (
-        f'<div style="max-width:{MAX_WIDTH}px; '
-        'overflow-x:auto; overflow-y:hidden; margin:auto;">\n'
+        '<div style="overflow-x:auto; white-space:nowrap;">\n'
         '<table><tr>\n'
     )
 
@@ -96,12 +91,12 @@ for folder in sorted(groups):
         key = file.lower()
         file_url = urllib.parse.quote(file)
 
-        # ---------- GIF (no label) ----------
+        # ---------- GIF ----------
         if ext == ".gif":
             img_url = urllib.parse.quote(file)
             cell = f"""
 <td align="center" data-key="{key}" style="padding:6px;">
-  <img src="{img_url}" width="{IMAGE_WIDTH}" style="height:auto; max-height:none;">
+  <img src="{img_url}" style="height:auto;">
 </td>
 """
 
@@ -110,7 +105,7 @@ for folder in sorted(groups):
             img_url = urllib.parse.quote(file)
             cell = f"""
 <td align="center" data-key="{key}" style="padding:6px;">
-  <img src="{img_url}" width="{IMAGE_WIDTH}" style="height:auto; max-height:none;"><br>
+  <img src="{img_url}" style="height:auto;"><br>
   <sub><b>{name}</b></sub>
 </td>
 """
@@ -132,7 +127,7 @@ for folder in sorted(groups):
             cell = f"""
 <td align="center" data-key="{key}" style="padding:6px;">
   <a href="{file_url}" style="position:relative; display:inline-block;">
-    <img src="{preview_url}" width="{VIDEO_WIDTH}" style="height:auto; max-height:none;">
+    <img src="{preview_url}" style="height:auto;">
     <div style="
       position:absolute;
       bottom:0;
