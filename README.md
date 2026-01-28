@@ -3,27 +3,6 @@
 
 
 
-
-<h3 align="center">LiveWallpaper</h3>
-<table align="center">
-<tr>
-
-<td align="center" data-key="livewallpaper/dragon samurai.mp4" style="padding:5px;">
-  <a href="LiveWallpaper/Dragon%20Samurai.mp4">
-    <img src="video_previews/9c5cccde9303.png" width="260" style="height:auto;"><br>
-    <sub><b>Dragon Samurai</b></sub>
-  </a>
-</td>
-
-<td align="center" data-key="livewallpaper/gojo.mp4" style="padding:5px;">
-  <a href="LiveWallpaper/gojo.mp4">
-    <img src="video_previews/4e66c24456a7.png" width="260" style="height:auto;"><br>
-    <sub><b>gojo</b></sub>
-  </a>
-</td>
-</tr>
-</table>
-<br>
 <h3 align="center">Mobile Wallpaper</h3>
 <table align="center">
 <tr>
@@ -1403,23 +1382,6 @@
 <br>
 
 
-
-<h3 align="center">video_previews</h3>
-<table align="center">
-<tr>
-
-<td align="center" data-key="video_previews/4e66c24456a7.png" style="padding:5px;">
-  <img src="video_previews/4e66c24456a7.png" width="260" style="height:auto;"><br>
-  <sub><b>4e66c24456a7</b></sub>
-</td>
-
-<td align="center" data-key="video_previews/9c5cccde9303.png" style="padding:5px;">
-  <img src="video_previews/9c5cccde9303.png" width="260" style="height:auto;"><br>
-  <sub><b>9c5cccde9303</b></sub>
-</td>
-</tr>
-</table>
-<br>
 
 
 
