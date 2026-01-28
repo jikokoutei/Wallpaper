@@ -14,7 +14,9 @@ IMAGE_EXTS = (".png", ".jpg", ".jpeg", ".webp", ".bmp", ".gif")
 VIDEO_EXTS = (".mp4", ".mkv", ".mov", ".webm", ".avi")
 
 PREVIEW_DIR = "video_previews"
-IMAGE_WIDTH = 250
+IMAGE_WIDTH = 260
+CELLS_PER_ROW = 3
+CELL_PADDING = 5
 # =======================================
 
 TARGET_DIR = sys.argv[1] if len(sys.argv) > 1 else "."
@@ -80,7 +82,9 @@ for folder in sorted(groups):
         continue
 
     section = f'<h3 align="center">{heading}</h3>\n'
-    section += '<table align="center"><tr>\n'
+    section += '<table align="center">\n<tr>\n'
+
+    col = 0
 
     for file in files:
         ext = os.path.splitext(file)[1].lower()
@@ -89,20 +93,11 @@ for folder in sorted(groups):
         key = file.lower()
         file_url = urllib.parse.quote(file)
 
-        # ---------- GIF ----------
-        if ext == ".gif":
+        # ---------- IMAGE / GIF ----------
+        if ext in IMAGE_EXTS:
             img_url = urllib.parse.quote(file)
             cell = f"""
-<td align="center" data-key="{key}" style="padding:8px;">
-  <img src="{img_url}" width="{IMAGE_WIDTH}" style="height:auto;">
-</td>
-"""
-
-        # ---------- IMAGE ----------
-        elif ext in IMAGE_EXTS:
-            img_url = urllib.parse.quote(file)
-            cell = f"""
-<td align="center" data-key="{key}" style="padding:8px;">
+<td align="center" data-key="{key}" style="padding:{CELL_PADDING}px;">
   <img src="{img_url}" width="{IMAGE_WIDTH}" style="height:auto;"><br>
   <sub><b>{name}</b></sub>
 </td>
@@ -123,8 +118,8 @@ for folder in sorted(groups):
             preview_url = urllib.parse.quote(preview_path)
 
             cell = f"""
-<td align="center" data-key="{key}" style="padding:8px;">
-  <a href="{file_url}" style="display:inline-block;">
+<td align="center" data-key="{key}" style="padding:{CELL_PADDING}px;">
+  <a href="{file_url}">
     <img src="{preview_url}" width="{IMAGE_WIDTH}" style="height:auto;"><br>
     <sub><b>{name}</b></sub>
   </a>
@@ -132,8 +127,12 @@ for folder in sorted(groups):
 """
 
         section += cell
+        col += 1
 
-    section += "</tr></table>\n<br>\n"
+        if col % CELLS_PER_ROW == 0:
+            section += "</tr>\n<tr>\n"
+
+    section += "</tr>\n</table>\n<br>\n"
     new_html += section
 
 # ---------- Update README ----------
